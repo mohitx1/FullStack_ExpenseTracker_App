@@ -11,24 +11,37 @@ function isstringinvalid(string){
     }
 }
 
- const signup = async (req, res)=>{
-    try{
-    const { name, email, password } = req.body;
-    console.log('email', email)
-    if(isstringinvalid(name) || isstringinvalid(email || isstringinvalid(password))){
-        return res.status(400).json({err: "Bad parameters . Something is missing"})
-    }
-    const saltrounds = 10;
-    bcrypt.hash(password, saltrounds, async (err, hash) => {
-        console.log(err)
-        await User.create({ name, email, password: hash })
-        res.status(201).json({message: 'Successfuly create new user'})
-    })
-    }catch(err) {
-            res.status(500).json(err);
+const signup = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (isstringinvalid(name) || isstringinvalid(email) || isstringinvalid(password)) {
+            return res.status(400).json({ err: "Bad parameters. Something is missing" });
         }
 
+        // Check if the email already exists in the database
+        const existingUser = await User.findOne({ where: { email } });
+
+        if (existingUser) {
+            return res.status(400).json({ err: "Email already in use. Please use a different email." });
+        }
+
+        const saltrounds = 10;
+
+        bcrypt.hash(password, saltrounds, async (err, hash) => {
+            if (err) {
+                return res.status(500).json({ err: "Error hashing password" });
+            }
+
+            // Create a new user only if the email is not already in use
+            await User.create({ name, email, password: hash });
+            res.status(201).json({ message: 'Successfully created a new user' });
+        });
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
 }
+
 
 const generateAccessToken = (id, name, ispremiumuser) => {
     return jwt.sign({ userId : id, name: name, ispremiumuser } ,'secretkey');
@@ -38,7 +51,7 @@ const login = async (req, res) => {
     try{
     const { email, password } = req.body;
     if(isstringinvalid(email) || isstringinvalid(password)){
-        return res.status(400).json({message: 'EMail idor password is missing ', success: false})
+        return res.status(400).json({message: 'Email id or password is missing ', success: false})
     }
     console.log(password);
     const user  = await User.findAll({ where : { email }})
