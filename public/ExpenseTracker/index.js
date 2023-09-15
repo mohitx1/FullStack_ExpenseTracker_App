@@ -1,3 +1,85 @@
+// Add these variables to keep track of pagination
+let currentPage = 1;
+const itemsPerPage = 10;
+
+// Modify the addNewExpensetoUI function to append expenses based on the current page
+function addNewExpensetoUI(expense) {
+    const parentElement = document.getElementById('listOfExpenses');
+    const expenseElemId = `expense-${expense.id}`;
+    
+    // Check if the expense should be displayed on the current page
+    if (Math.ceil(parentElement.childElementCount / itemsPerPage) === currentPage) {
+        const liElement = document.createElement('li');
+        liElement.id = expenseElemId;
+        liElement.innerHTML = `${expense.expenseamount} - ${expense.category} - ${expense.description}
+            <button onclick='deleteExpense(event, ${expense.id})'>
+                Delete Expense
+            </button>`;
+        parentElement.appendChild(liElement);
+    }
+}
+
+// Add "Next" and "Previous" buttons for pagination
+function updatePaginationButtons() {
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    
+    if (currentPage === 1) {
+        prevButton.disabled = true;
+    } else {
+        prevButton.disabled = false;
+    }
+
+    const totalExpenses = document.getElementById('listOfExpenses').childElementCount;
+    const totalPages = Math.ceil(totalExpenses / itemsPerPage);
+
+    if (currentPage === totalPages) {
+        nextButton.disabled = true;
+    } else {
+        nextButton.disabled = false;
+    }
+}
+
+// Handle "Next" button click
+function nextPage() {
+    currentPage++;
+    updatePaginationButtons();
+    displayExpenses();
+}
+
+// Handle "Previous" button click
+function prevPage() {
+    currentPage--;
+    updatePaginationButtons();
+    displayExpenses();
+}
+
+// Function to display expenses based on the current page
+function displayExpenses() {
+    const allExpenses = document.querySelectorAll('#listOfExpenses li');
+    allExpenses.forEach((expense, index) => {
+        if (index >= (currentPage - 1) * itemsPerPage && index < currentPage * itemsPerPage) {
+            expense.style.display = 'block';
+        } else {
+            expense.style.display = 'none';
+        }
+    });
+}
+
+// Initialize pagination and buttons
+window.addEventListener('DOMContentLoaded', () => {
+    // Add "Next" and "Previous" buttons to your HTML
+    document.getElementById('paginationButtons').innerHTML = `
+        <button id="prevButton" onclick="prevPage()">Previous</button>
+        <button id="nextButton" onclick="nextPage()">Next</button>`;
+    
+    // Initialize the display
+    displayExpenses();
+    updatePaginationButtons();
+});
+
+
+
 function addNewExpense(e){
     e.preventDefault();
 
@@ -135,3 +217,4 @@ document.getElementById('rzp-button1').onclick = async function (e) {
     alert('Something went wrong')
  });
 }
+
